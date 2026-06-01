@@ -48,20 +48,22 @@ Include:
         return "Research temporarily unavailable."
 
 
-# Test Data
-topic = "Indian EV Market"
+if __name__ == "__main__":
 
-section = "Government Policies"
+    # Test Data
+    topic = "Indian EV Market"
 
-# Run Research Agent
-notes = research_section(
-    topic,
-    section
-)
+    section = "Government Policies"
 
-# Print Output
-print("\n========================")
-print("RESEARCH NOTES")
-print("========================\n")
+    # Run Research Agent
+    notes = research_section(
+        topic,
+        section
+    )
 
-print(notes)
+    # Print Output
+    print("\n========================")
+    print("RESEARCH NOTES")
+    print("========================\n")
+
+    print(notes)
