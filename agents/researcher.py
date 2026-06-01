@@ -36,32 +36,41 @@ Include:
     print(prompt)
 
     try:
+
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.0-flash",
             contents=prompt
         )
 
         return response.text
 
     except Exception as e:
+
         print(f"\nError: {e}")
-        return "Research temporarily unavailable."
+
+        return f"""
+Research for section '{section}' could not be completed.
+
+Possible reasons:
+- Gemini quota exceeded
+- Temporary server overload
+- API unavailable
+
+Further research required.
+"""
 
 
 if __name__ == "__main__":
 
-    # Test Data
     topic = "Indian EV Market"
 
     section = "Government Policies"
 
-    # Run Research Agent
     notes = research_section(
         topic,
         section
     )
 
-    # Print Output
     print("\n========================")
     print("RESEARCH NOTES")
     print("========================\n")
