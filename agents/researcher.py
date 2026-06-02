@@ -1,78 +1,108 @@
+import sys
 import os
 
-from dotenv import load_dotenv
-from google import genai
+sys.path.append(
+    os.path.dirname(
+        os.path.dirname(__file__)
+    )
+)
 
-# Load environment variables
-load_dotenv()
+from groq import Groq
 
-# Create Gemini client
-client = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY")
+from tools.search_tool import search_web
+
+from config.settings import (
+    GROQ_API_KEY,
+    MODEL_NAME
+)
+
+client = Groq(
+    api_key=GROQ_API_KEY
 )
 
 
 def research_section(topic, section):
 
-    prompt = f"""
-Research this topic:
+    print(f"\nSearching web for: {section}\n")
 
+    search_results = search_web(
+        f"{topic} {section}"
+    )
+
+    source_text = ""
+
+    for result in search_results:
+
+        source_text += f"""
+Title: {result['title']}
+URL: {result['url']}
+"""
+
+    prompt = f"""
+You are a market research analyst.
+
+Topic:
 {topic}
 
 Section:
-
 {section}
 
-Give 5 bullet points.
+Web Sources:
 
-Include:
-- Key facts
-- Trends
-- Important insights
-- Major players if relevant
+{source_text}
+
+Provide:
+
+- Key Facts
+- Important Trends
+- Key Insights
+- Major Companies
+
+Write detailed research notes.
 """
-
-    print("Sending prompt...\n")
-    print(prompt)
 
     try:
 
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt
+        response = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
         )
 
-        return response.text
+        return response.choices[
+            0
+        ].message.content
 
     except Exception as e:
 
         print(f"\nError: {e}")
 
-        return f"""
-Research for section '{section}' could not be completed.
+        fallback_notes = f"""
+Research for section '{section}'.
 
-Possible reasons:
-- Gemini quota exceeded
-- Temporary server overload
-- API unavailable
+Sources Found:
 
-Further research required.
 """
+
+        for result in search_results:
+
+            fallback_notes += f"""
+• {result['title']}
+{result['url']}
+"""
+
+        return fallback_notes
 
 
 if __name__ == "__main__":
 
-    topic = "Indian EV Market"
-
-    section = "Government Policies"
-
     notes = research_section(
-        topic,
-        section
+        "Indian EV Market",
+        "Government Policies"
     )
-
-    print("\n========================")
-    print("RESEARCH NOTES")
-    print("========================\n")
 
     print(notes)

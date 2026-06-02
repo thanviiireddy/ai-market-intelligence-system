@@ -1,12 +1,12 @@
-import os
+from groq import Groq
 
-from dotenv import load_dotenv
-from google import genai
+from config.settings import (
+    GROQ_API_KEY,
+    MODEL_NAME
+)
 
-load_dotenv()
-
-client = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY")
+client = Groq(
+    api_key=GROQ_API_KEY
 )
 
 
@@ -19,7 +19,7 @@ Create a detailed report on:
 
 {topic}
 
-Using the following research:
+Using:
 
 {research_results}
 
@@ -30,24 +30,28 @@ Structure:
 3. Key Findings
 4. Analysis
 5. Conclusion
-
-Write professionally.
 """
 
     try:
 
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt
+        response = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
         )
 
-        return response.text
+        return response.choices[
+            0
+        ].message.content
 
     except Exception as e:
 
         print(f"\nWriter Error: {e}")
 
-        # Fallback report
         report = f"""
 =================================
 {topic.upper()} REPORT
@@ -56,9 +60,6 @@ Write professionally.
 EXECUTIVE SUMMARY
 
 This report analyzes the {topic}.
-
-KEY FINDINGS
-
 """
 
         for section, notes in research_results.items():
@@ -67,27 +68,19 @@ KEY FINDINGS
             report += "-" * len(section)
             report += f"\n{notes}\n"
 
-        report += """
-
-CONCLUSION
-
-Further analysis recommended based on latest market developments.
-"""
-
         return report
 
 
 if __name__ == "__main__":
 
     sample_data = {
-        "Market Overview": "EV market growing rapidly",
-        "Competition": "Tata Motors leads market",
-        "Infrastructure": "Charging network expanding"
+        "Overview":
+        "Market growing rapidly"
     }
 
-    report = write_report(
-        "Indian EV Market",
-        sample_data
+    print(
+        write_report(
+            "Indian EV Market",
+            sample_data
+        )
     )
-
-    print(report)

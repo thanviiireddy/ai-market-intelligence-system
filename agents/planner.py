@@ -1,80 +1,113 @@
-import os
 import json
 
-from dotenv import load_dotenv
-from google import genai
+from groq import Groq
 
-# Load environment variables
-load_dotenv()
+from config.settings import (
+    GROQ_API_KEY,
+    MODEL_NAME
+)
 
-# Create Gemini client
-client = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY")
+client = Groq(
+    api_key=GROQ_API_KEY
 )
 
 
 def create_research_plan(topic):
 
     prompt = f"""
-Create a research plan for:
+Create a market research plan for:
 
 {topic}
 
-Return ONLY JSON.
+Return ONLY valid JSON.
 
-Format:
+Example:
 
 {{
-    "topic": "...",
+    "topic": "{topic}",
     "sections": [
-        "...",
-        "...",
-        "..."
+        "Market Overview",
+        "Key Trends",
+        "Major Players",
+        "Challenges",
+        "Future Outlook"
     ]
 }}
+
+Rules:
+- Return JSON only
+- No markdown
+- No explanations
+- No descriptions
+- No nested objects
+- Sections must be strings only
+- Generate 5 relevant sections for the topic
 """
 
     try:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt
+
+        response = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
         )
 
-        text = response.text
+        text = response.choices[
+            0
+        ].message.content
 
-        text = text.replace("```json", "")
-        text = text.replace("```", "")
+        text = text.replace(
+            "```json",
+            ""
+        )
+
+        text = text.replace(
+            "```",
+            ""
+        )
+
         text = text.strip()
 
         return json.loads(text)
 
     except Exception as e:
 
+        print("\nUSING FALLBACK PLAN")
         print(f"\nPlanner Error: {e}")
 
-        # Fallback plan if Gemini is unavailable
         return {
             "topic": topic,
             "sections": [
-                "Market Overview",
-                "Government Policies",
-                "Competition",
-                "Infrastructure",
-                "Consumer Behavior"
+                f"Overview of {topic}",
+                f"Key Trends in {topic}",
+                f"Major Players in {topic}",
+                f"Challenges in {topic}",
+                f"Future Outlook for {topic}"
             ]
         }
 
 
 if __name__ == "__main__":
 
-    topic = input("Enter a topic: ")
+    topic = input(
+        "Enter a topic: "
+    )
 
-    plan = create_research_plan(topic)
+    plan = create_research_plan(
+        topic
+    )
 
     print("\nTopic:")
     print(plan["topic"])
 
     print("\nSections:")
 
-    for i, section in enumerate(plan["sections"], start=1):
+    for i, section in enumerate(
+        plan["sections"],
+        start=1
+    ):
         print(f"{i}. {section}")
