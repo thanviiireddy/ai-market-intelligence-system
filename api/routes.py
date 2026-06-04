@@ -14,5 +14,12 @@ def research(topic: str):
         "topic": state.topic,
         "plan": state.plan,
         "research_results": state.research_results,
-        "report": state.report
+
+        "verification": state.verification,
+
+        "report": state.report,
+
+        "review": state.review,
+
+        "report_path": state.report_path
     }

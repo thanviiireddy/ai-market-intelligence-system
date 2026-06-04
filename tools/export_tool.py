@@ -7,7 +7,12 @@ def save_report(report, topic):
     os.makedirs("outputs/reports", exist_ok=True)
 
     # Create filename
-    filename = topic.lower().replace(" ", "_") + "_report.txt"
+    filename = (
+    topic.strip()
+    .lower()
+    .replace(" ", "_")
+    + "_report.txt"
+)
 
     filepath = os.path.join(
         "outputs",
